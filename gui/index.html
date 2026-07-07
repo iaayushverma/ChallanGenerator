@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Automated Chalaan Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Timeless Impressions</h2>
+        <ul class="nav">
+            <li class="active" onclick="switchTab('generator')">Generator</li>
+            <li onclick="switchTab('tracking')">Chalaan Tracking</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div id="generator" class="tab-content active">
+            <h1>Chalaan Generator</h1>
+            
+            <div class="card">
+                <h3>1. Master Data</h3>
+                <button onclick="loadMaster()">Upload Store Master Excel</button>
+                <p id="master-status" class="status-text">No master loaded.</p>
+            </div>
+
+            <div class="card">
+                <h3>2. Estimate Data</h3>
+                <button onclick="loadEstimate()">Upload Estimate Excel</button>
+                <p id="estimate-status" class="status-text">No estimate loaded.</p>
+                
+                <div id="unmatched-warning" class="warning" style="display: none;">
+                    <strong>Warning:</strong> The following Store Codes from the Estimate were not found in the Master list and will be skipped:<br>
+                    <span id="unmatched-list"></span>
+                </div>
+            </div>
+
+            <div class="card" id="generation-section" style="opacity: 0.5; pointer-events: none;">
+                <h3>3. Generate PDFs</h3>
+                
+                <div class="folder-picker-section">
+                    <button onclick="selectOutputFolder()">Choose Save Location</button>
+                    <span id="save-location-text" class="status-text bold-text">No folder selected</span>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="client-name">Client Name:</label>
+                    <input type="text" id="client-name" value="Reliance" placeholder="Enter Client Name">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="state-select">Select State for this batch:</label>
+                    <select id="state-select">
+                        <option value="">-- Select State --</option>
+                        <optgroup label="States">
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                            <option value="Assam">Assam</option>
+                            <option value="Bihar">Bihar</option>
+                            <option value="Chhattisgarh">Chhattisgarh</option>
+                            <option value="Goa">Goa</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Haryana">Haryana</option>
+                            <option value="Himachal Pradesh">Himachal Pradesh</option>
+                            <option value="Jharkhand">Jharkhand</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Kerala">Kerala</option>
+                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Manipur">Manipur</option>
+                            <option value="Meghalaya">Meghalaya</option>
+                            <option value="Mizoram">Mizoram</option>
+                            <option value="Nagaland">Nagaland</option>
+                            <option value="Odisha">Odisha</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="Sikkim">Sikkim</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Tripura">Tripura</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="Uttarakhand">Uttarakhand</option>
+                            <option value="West Bengal">West Bengal</option>
+                        </optgroup>
+                        <optgroup label="Union Territories">
+                            <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                            <option value="Chandigarh">Chandigarh</option>
+                            <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra & Nagar Haveli and Daman & Diu</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Jammu and Kashmir">Jammu & Kashmir</option>
+                            <option value="Ladakh">Ladakh</option>
+                            <option value="Lakshadweep">Lakshadweep</option>
+                            <option value="Puducherry">Puducherry</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="actions">
+                    <button class="primary" onclick="generateBulk()">Generate ALL Valid Stores</button>
+                    <span class="or-divider">OR</span>
+                    <select id="single-store-select"><option>-- Select a specific store --</option></select>
+                    <button onclick="generateSingle()">Generate Selected</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tracking" class="tab-content">
+            <h1>Chalaan Tracking</h1>
+            <div class="card row-layout">
+                <div>
+                    <input type="text" id="new-emp-name" placeholder="New Employee Name">
+                    <button onclick="addEmployee()">Add Employee</button>
+                </div>
+
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
+                    <button onclick="loadTracking()" style="background-color: mediumseagreen;">Refresh Data</button>
+                    <input type="text" id="search-tracking" onkeyup="filterTracking()" placeholder="Search any record..." style="width: 200px; margin-right: 0;">
+                </div>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Chalaan No</th>
+                        <th>Store</th>
+                        <th>Date</th>
+                        <th>Assigned To</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tracking-body"></tbody>
+            </table>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

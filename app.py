@@ -1,5 +1,5 @@
 """
-Automated Chalaan Generator - Backend API
+Automated Challan Generator - Backend API
 Client: Timeless Impressions Printers
 """
 
@@ -208,14 +208,14 @@ class ChalaanAPI:
                 elements.append(Image(logo_path, width=150, height=50, kind='proportional', hAlign='LEFT'))
                 elements.append(Spacer(1, 20))
             
-            elements.append(Paragraph("<b>DELIVERY CHALAAN</b>", ParagraphStyle(name='Title', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=16, alignment=1, spaceAfter=20)))
+            elements.append(Paragraph("<b>DELIVERY CHALLAN</b>", ParagraphStyle(name='Title', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=16, alignment=1, spaceAfter=20)))
             
             safe_store_name = escape(str(final_store_name))
             safe_client_name = escape(str(client_name))
             
             header_data = [
                 ["Client:", Paragraph(safe_client_name, styles['Normal']), "Dated:", today_date],
-                ["Store Address:", Paragraph(safe_store_name, styles['Normal']), "Chalaan no.:", str(chalaan_no)],
+                ["Store Address:", Paragraph(safe_store_name, styles['Normal']), "Challan no.:", str(chalaan_no)],
                 ["Store Code:", store_code, "State:", state]
             ]
             
@@ -335,5 +335,5 @@ class ChalaanAPI:
 if __name__ == '__main__':
     api = ChalaanAPI()
     template_path = os.path.join(get_base_path(), 'gui', 'index.html')
-    webview.create_window('Timeless Impressions - Chalaan Generator', template_path, js_api=api, width=1050, height=800)
+    webview.create_window('Timeless Impressions - Challan Generator', template_path, js_api=api, width=1050, height=800)
     webview.start()

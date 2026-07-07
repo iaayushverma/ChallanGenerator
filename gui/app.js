@@ -93,7 +93,7 @@ async function generateSingle() {
     const res = await pywebview.api.generate_pdfs([store], state, outputFolder, clientName);
     document.body.style.cursor = 'default';
     
-    if (res.success) alert(`Successfully generated Chalaan for ${store}.\nSaved to: ${res.path}`);
+    if (res.success) alert(`Successfully generated Challan for ${store}.\nSaved to: ${res.path}`);
     else alert("Error: " + res.error);
 }
 
@@ -188,7 +188,7 @@ function filterTracking() {
 
 async function deleteChalaan(chalaan_no) {
     // Built-in browser confirmation popup
-    const isConfirmed = confirm(`Are you sure you want to permanently delete Chalaan No. ${chalaan_no} from the tracking system?`);
+    const isConfirmed = confirm(`Are you sure you want to permanently delete Challan No. ${chalaan_no} from the tracking system?`);
     
     if (isConfirmed) {
         const res = await pywebview.api.delete_tracking(chalaan_no);

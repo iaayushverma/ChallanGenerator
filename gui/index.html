@@ -105,23 +105,46 @@
             </div>
         </div>
 
-        <div id="tracking" class="tab-content">
+                <div id="tracking" class="tab-content">
             <h1>Challan Tracking</h1>
-            <div class="card row-layout">
+            <div class="card row-layout" style="align-items: flex-start;">
                 <div>
                     <input type="text" id="new-emp-name" placeholder="New Employee Name">
                     <button onclick="addEmployee()">Add Employee</button>
                 </div>
-
+                
                 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
-                    <button onclick="loadTracking()" style="background-color: mediumseagreen;">Refresh Data</button>
+                    <button onclick="loadTracking()" style="background-color: #27ae60;">Refresh Data</button>
                     <input type="text" id="search-tracking" onkeyup="filterTracking()" placeholder="Search any record..." style="width: 200px; margin-right: 0;">
                 </div>
             </div>
             
+            <div id="bulk-actions" class="card" style="display: none; background-color: #e8f4fd; border-left: 4px solid #3498db; margin-bottom: 15px; padding: 15px;">
+                <strong>Bulk Actions (<span id="selected-count">0</span> selected):</strong>
+                <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
+                    
+                    <label for="bulk-emp-select" style="font-size: 13px; font-weight: bold;">Assign to:</label>
+                    <select id="bulk-emp-select">
+                        <option value="">-- No Change --</option>
+                        <option value="Unassigned">Unassigned</option>
+                        </select>
+
+                    <label for="bulk-status-select" style="font-size: 13px; font-weight: bold; margin-left: 10px;">Set Status:</label>
+                    <select id="bulk-status-select">
+                        <option value="">-- No Change --</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Received">Received</option>
+                    </select>
+
+                    <button class="primary" onclick="applyBulkUpdate()" style="padding: 6px 15px; font-size: 13px; margin-left: 10px;">Apply Update</button>
+                    <button onclick="applyBulkDelete()" style="background-color: #e74c3c; padding: 6px 15px; font-size: 13px; margin-left: auto;">Delete Selected</button>
+                </div>
+            </div>
+
             <table class="data-table">
                 <thead>
                     <tr>
+                        <th style="width: 30px;"><input type="checkbox" id="select-all" onclick="toggleAllCheckboxes()"></th>
                         <th>Challan No</th>
                         <th>Store</th>
                         <th>Date</th>

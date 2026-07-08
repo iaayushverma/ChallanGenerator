@@ -388,6 +388,44 @@ class ChalaanAPI:
             except Exception as e:
                 return {"error": f"Failed to restore backup: {str(e)}"}
         return {"error": "Import cancelled."}
+    
+    def bulk_update_tracking(self, chalaan_nos, employee, status):
+        if not chalaan_nos: 
+            return {"success": False, "error": "No chalaans selected."}
+        with sqlite3.connect(self.db_path, timeout=10) as conn:
+            c = conn.cursor()
+            placeholders = ','.join(['?'] * len(chalaan_nos))
+            
+            updates = []
+            params = []
+            
+            # Only update the fields the user actually selected
+            if employee:
+                updates.append("employee_name = ?")
+                params.append(employee)
+            if status:
+                updates.append("status = ?")
+                params.append(status)
+            
+            if not updates:
+                return {"success": True}
+            
+            query = f"UPDATE chalaans SET {', '.join(updates)} WHERE chalaan_no IN ({placeholders})"
+            params.extend(chalaan_nos)
+            
+            c.execute(query, params)
+            conn.commit()
+            return {"success": True}
+
+    def bulk_delete_tracking(self, chalaan_nos):
+        if not chalaan_nos: 
+            return {"success": False, "error": "No chalaans selected."}
+        with sqlite3.connect(self.db_path, timeout=10) as conn:
+            c = conn.cursor()
+            placeholders = ','.join(['?'] * len(chalaan_nos))
+            c.execute(f"DELETE FROM chalaans WHERE chalaan_no IN ({placeholders})", chalaan_nos)
+            conn.commit()
+            return {"success": True}
 
 
 if __name__ == '__main__':

@@ -99,6 +99,14 @@ async function generateSingle() {
 
 async function loadEmployees() {
     employeesList = await pywebview.api.get_employees();
+    
+    // Populate the bulk update dropdown
+    const bulkEmpSelect = document.getElementById('bulk-emp-select');
+    if (bulkEmpSelect) {
+        let opts = '<option value="">-- No Change --</option><option value="Unassigned">Unassigned</option>';
+        employeesList.forEach(e => { opts += `<option value="${e}">${e}</option>`; });
+        bulkEmpSelect.innerHTML = opts;
+    }
 }
 
 async function addEmployee() {
@@ -116,6 +124,10 @@ async function loadTracking() {
     const tbody = document.getElementById('tracking-body');
     tbody.innerHTML = ''; 
     
+    // Reset bulk panel on reload
+    document.getElementById('select-all').checked = false;
+    handleSelectionChange(); 
+    
     data.forEach(row => {
         let tr = document.createElement('tr');
         
@@ -131,7 +143,8 @@ async function loadTracking() {
             <option value="Received" ${row.status === 'Received' ? 'selected' : ''}>Received</option>
         </select>`;
 
-                tr.innerHTML = `
+        tr.innerHTML = `
+            <td><input type="checkbox" class="row-checkbox" value="${row.chalaan_no}" onchange="handleSelectionChange()"></td>
             <td>${row.chalaan_no}</td>
             <td>${row.store_name}</td>
             <td>${row.date}</td>
@@ -233,6 +246,79 @@ async function importData() {
             await loadTracking();
         } else if (res.error !== "Import cancelled.") {
             alert(`Error restoring data: ${res.error}`);
+        }
+    }
+}
+
+/* =========================================================
+   BULK ACTION LOGIC 
+   ========================================================= */
+
+function toggleAllCheckboxes() {
+    const isChecked = document.getElementById('select-all').checked;
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    
+    checkboxes.forEach(cb => {
+        // Only select rows that are currently visible (respecting the search filter!)
+        if (cb.closest('tr').style.display !== "none") {
+            cb.checked = isChecked;
+        }
+    });
+    handleSelectionChange();
+}
+
+function handleSelectionChange() {
+    const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+    const count = checkboxes.length;
+    const panel = document.getElementById('bulk-actions');
+    
+    if (count > 0) {
+        panel.style.display = 'block';
+        document.getElementById('selected-count').innerText = count;
+    } else {
+        panel.style.display = 'none';
+        document.getElementById('select-all').checked = false;
+    }
+}
+
+async function applyBulkUpdate() {
+    const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+    const chalaan_nos = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    const emp = document.getElementById('bulk-emp-select').value;
+    const stat = document.getElementById('bulk-status-select').value;
+
+    if (chalaan_nos.length === 0) return;
+    if (!emp && !stat) return alert("Please select an employee or status to update.");
+
+    document.body.style.cursor = 'wait';
+    const res = await pywebview.api.bulk_update_tracking(chalaan_nos, emp, stat);
+    document.body.style.cursor = 'default';
+
+    if (res.success) {
+        await loadTracking();
+        document.getElementById('bulk-emp-select').value = "";
+        document.getElementById('bulk-status-select').value = "";
+    } else {
+        alert("Error updating records: " + res.error);
+    }
+}
+
+async function applyBulkDelete() {
+    const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+    const chalaan_nos = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    if (chalaan_nos.length === 0) return;
+
+    const isConfirmed = confirm(`Are you sure you want to permanently delete these ${chalaan_nos.length} selected chalaans?`);
+    if (isConfirmed) {
+        document.body.style.cursor = 'wait';
+        const res = await pywebview.api.bulk_delete_tracking(chalaan_nos);
+        document.body.style.cursor = 'default';
+
+        if (res.success) {
+            await loadTracking();
+        } else {
+            alert("Error deleting records: " + res.error);
         }
     }
 }

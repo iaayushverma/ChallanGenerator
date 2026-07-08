@@ -11,6 +11,7 @@
         <ul class="nav">
             <li class="active" onclick="switchTab('generator')">Generator</li>
             <li onclick="switchTab('tracking')">Challan Tracking</li>
+            <li onclick="switchTab('backups')">Data Backup</li> </ul>
         </ul>
     </div>
 
@@ -132,6 +133,23 @@
                 <tbody id="tracking-body"></tbody>
             </table>
         </div>
+
+        <div id="backups" class="tab-content">
+            <h1>Data Backup & Restore</h1>
+            
+            <div class="card">
+                <h3>Export Data Backup</h3>
+                <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">Save a secure copy of your tracking data, employee list, and chalaan sequence numbers to a USB drive or cloud folder.</p>
+                <button class="primary" onclick="exportData()">Export Database</button>
+            </div>
+
+            <div class="card">
+                <h3>Restore from Backup</h3>
+                <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">Restore your system using an older backup file. <br><strong style="color: #e74c3c;">Warning:</strong> This will completely overwrite your current data.</p>
+                <button style="background-color: #e74c3c; color: white;" onclick="importData()">Restore Database</button>
+            </div>
+        </div>
+
     </div>
     <script src="app.js"></script>
 </body>

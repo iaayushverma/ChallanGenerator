@@ -7,6 +7,7 @@ import os
 import sys
 import sqlite3
 import datetime
+import shutil
 import webview
 from openpyxl import load_workbook
 from reportlab.lib.pagesizes import A4
@@ -330,6 +331,42 @@ class ChalaanAPI:
             c.execute("DELETE FROM chalaans WHERE chalaan_no = ?", (chalaan_no,))
             conn.commit()
             return {"success": True}
+
+        # ================= BACKUP SYSTEM =================
+
+    def export_backup(self):
+        window = webview.windows[0]
+        # Open a Save dialog asking where they want to store the backup
+        result = window.create_file_dialog(webview.FileDialog.SAVE, save_filename='ChallanApp_Data_Backup.db')
+        if result:
+            try:
+                # Copy the live database file to their chosen location
+                shutil.copy2(self.db_path, result[0])
+                return {"success": True, "path": result[0]}
+            except Exception as e:
+                return {"error": str(e)}
+        return {"error": "Export cancelled."}
+
+    def import_backup(self):
+        window = webview.windows[0]
+        # Open an Open dialog to select an old backup file
+        result = window.create_file_dialog(webview.FileDialog.OPEN, file_types=('Database Files (*.db)',))
+        if result:
+            try:
+                # Security check: Make sure it's actually our app's database before overwriting
+                test_conn = sqlite3.connect(result[0])
+                c = test_conn.cursor()
+                c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='chalaans'")
+                if not c.fetchone():
+                    return {"error": "Invalid file. This does not appear to be a valid Challan backup database."}
+                test_conn.close()
+                
+                # Overwrite the live database with the backup
+                shutil.copy2(result[0], self.db_path)
+                return {"success": True}
+            except Exception as e:
+                return {"error": f"Failed to restore backup: {str(e)}"}
+        return {"error": "Import cancelled."}
 
 
 if __name__ == '__main__':

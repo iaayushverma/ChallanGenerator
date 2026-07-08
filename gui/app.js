@@ -200,3 +200,39 @@ async function deleteChalaan(chalaan_no) {
         }
     }
 }
+
+/* =========================================================
+   BACKUP SYSTEM LOGIC 
+   ========================================================= */
+
+async function exportData() {
+    document.body.style.cursor = 'wait';
+    const res = await pywebview.api.export_backup();
+    document.body.style.cursor = 'default';
+    
+    if (res.success) {
+        alert(`Backup successfully saved to:\n${res.path}`);
+    } else if (res.error !== "Export cancelled.") {
+        alert(`Error exporting data: ${res.error}`);
+    }
+}
+
+async function importData() {
+    // Safety confirmation before overwriting data
+    const isConfirmed = confirm("WARNING: Restoring a backup will permanently overwrite your current tracking data and sequence numbers. Are you sure you want to proceed?");
+    
+    if (isConfirmed) {
+        document.body.style.cursor = 'wait';
+        const res = await pywebview.api.import_backup();
+        document.body.style.cursor = 'default';
+        
+        if (res.success) {
+            alert("Backup restored successfully! Your tracking data has been updated.");
+            // Refresh the data in the background so it's ready if they switch to the Tracking tab
+            await loadEmployees();
+            await loadTracking();
+        } else if (res.error !== "Import cancelled.") {
+            alert(`Error restoring data: ${res.error}`);
+        }
+    }
+}

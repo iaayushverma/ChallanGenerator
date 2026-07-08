@@ -12,7 +12,7 @@ import webview
 from openpyxl import load_workbook
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from xml.sax.saxutils import escape
 
@@ -191,19 +191,30 @@ class ChalaanAPI:
         styles = getSampleStyleSheet()
         cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=8, leading=10)
 
+        # NEW: Determine if we are in Bulk Mode
+        is_bulk = len(stores_to_process) > 1
+        elements = []
+        
+        # NEW: Setup a single massive Document for Bulk Mode
+        if is_bulk:
+            timestamp = datetime.datetime.now().strftime("%H%M%S")
+            safe_state = state.replace(" ", "_") if state else "UnknownState"
+            bulk_filename = os.path.join(output_dir, f"Bulk_Challans_{safe_state}_{today_date.replace('.','-')}_{timestamp}.pdf")
+            doc = SimpleDocTemplate(bulk_filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+
         for store_code in stores_to_process:
             items = self.current_estimate_data.get(store_code, [])
             if not items: continue
+
+            # NEW: Insert a page break if we are in bulk mode and it's not the first store
+            if is_bulk and generated_count > 0:
+                elements.append(PageBreak())
 
             master_name = self.current_store_master.get(store_code, "")
             backup_name = self.estimate_store_names.get(store_code, "Unknown Store")
             final_store_name = master_name if master_name else backup_name
 
             chalaan_no = self.get_next_chalaan_no()
-            
-            pdf_filename = os.path.join(output_dir, f"Chalaan_{chalaan_no}_{store_code}.pdf")
-            doc = SimpleDocTemplate(pdf_filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
-            elements = []
             
             if os.path.exists(logo_path):
                 elements.append(Image(logo_path, width=150, height=50, kind='proportional', hAlign='LEFT'))
@@ -282,8 +293,7 @@ class ChalaanAPI:
                 elements.append(Image(sign_path, width=100, height=40, kind='proportional', hAlign='RIGHT'))
             elements.append(Paragraph("<b>Authorized Signatory</b>", ParagraphStyle(name='Sign', parent=styles['Normal'], alignment=2)))
             
-            doc.build(elements)
-            
+            # DB Insert
             with sqlite3.connect(self.db_path, timeout=10) as conn:
                 c = conn.cursor()
                 c.execute("INSERT INTO chalaans (chalaan_no, store_code, store_name, state, date, employee_name, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -291,6 +301,17 @@ class ChalaanAPI:
                 conn.commit()
                 
             generated_count += 1
+            
+            # NEW: If we are generating just a single store, build the single PDF here and clear out the elements
+            if not is_bulk:
+                pdf_filename = os.path.join(output_dir, f"Challan_{chalaan_no}_{store_code}.pdf")
+                single_doc = SimpleDocTemplate(pdf_filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+                single_doc.build(elements)
+                elements = []
+
+        # NEW: If we are in Bulk Mode, compile all pages into the single massive document
+        if is_bulk and generated_count > 0:
+            doc.build(elements)
 
         return {"success": True, "count": generated_count, "path": output_dir}
 

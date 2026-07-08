@@ -217,8 +217,8 @@ class ChalaanAPI:
             chalaan_no = self.get_next_chalaan_no()
             
             if os.path.exists(logo_path):
-                elements.append(Image(logo_path, width=150, height=50, kind='proportional', hAlign='LEFT'))
-                elements.append(Spacer(1, 20))
+                elements.append(Image(logo_path, width=530, height=80, kind='proportional', hAlign='CENTER'))
+                elements.append(Spacer(1, 40))
             
             elements.append(Paragraph("<b>DELIVERY CHALLAN</b>", ParagraphStyle(name='Title', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=16, alignment=1, spaceAfter=20)))
             

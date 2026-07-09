@@ -32,3 +32,17 @@ select, input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-
 .data-table th, .data-table td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
 .data-table th { background-color: #f8f9fa; }
 .row-layout { display: flex; justify-content: space-between; align-items: center; }
+
+/* --- Reduce Font Size for the Tracking Table --- */
+.data-table th, 
+.data-table td {
+    font-size: 12px;       /* Shrinks the main text */
+    padding: 8px 10px;     /* Slightly reduces the cell padding to match */
+}
+
+/* Shrink the dropdown menus and buttons inside the table to match */
+.data-table select, 
+.data-table button {
+    font-size: 12px; 
+    padding: 4px 8px;
+}

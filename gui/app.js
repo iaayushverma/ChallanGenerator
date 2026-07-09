@@ -146,7 +146,9 @@ async function loadTracking() {
         tr.innerHTML = `
             <td><input type="checkbox" class="row-checkbox" value="${row.chalaan_no}" onchange="handleSelectionChange()"></td>
             <td>${row.chalaan_no}</td>
+            <td>${row.store_code}</td>
             <td>${row.store_name}</td>
+            <td>${row.campaign_name}</td>
             <td>${row.date}</td>
             <td>${empSelect}</td>
             <td>${statSelect}</td>
@@ -155,14 +157,25 @@ async function loadTracking() {
                 <button onclick="deleteChalaan(${row.chalaan_no})" style="background-color: #e74c3c; padding: 6px 12px; font-size: 12px;">Delete</button>
             </td>
         `;
+
         tbody.appendChild(tr);
     });
 }
 
 async function updateRow(chalaan_no, selectEl) {
     const tr = selectEl.closest('tr');
-    const emp = tr.querySelectorAll('select')[0].value;
-    const stat = tr.querySelectorAll('select')[1].value;
+    const empSelect = tr.querySelectorAll('select')[0];
+    const statSelect = tr.querySelectorAll('select')[1];
+    
+    const emp = empSelect.value;
+    const stat = statSelect.value;
+    
+    // NEW VALIDATION: Block status change if no employee is assigned
+    if (emp === 'Unassigned' && stat !== 'Pending') {
+        alert("Cannot change status: Please assign an employee to this Challan first.");
+        statSelect.value = 'Pending'; // Revert the dropdown back to Pending
+        return; // Stop the update process
+    }
     
     await pywebview.api.update_tracking(chalaan_no, emp, stat);
     
@@ -173,24 +186,22 @@ async function updateRow(chalaan_no, selectEl) {
 
 function filterTracking() {
     const filterText = document.getElementById('search-tracking').value.toLowerCase();
-    const tbody = document.getElementById('tracking-body');
-    const rows = tbody.getElementsByTagName('tr');
+    const rows = document.getElementById('tracking-body').getElementsByTagName('tr');
 
     for (let i = 0; i < rows.length; i++) {
-        // Grab standard text from the first 3 columns (No, Store, Date)
-        const chalaanNo = rows[i].getElementsByTagName('td')[0].innerText.toLowerCase();
-        const storeName = rows[i].getElementsByTagName('td')[1].innerText.toLowerCase();
-        const dateStr = rows[i].getElementsByTagName('td')[2].innerText.toLowerCase();
+        const tds = rows[i].getElementsByTagName('td');
+        const chalaanNo = tds[1].innerText.toLowerCase();
+        const storeCode = tds[2].innerText.toLowerCase();
+        const storeName = tds[3].innerText.toLowerCase();
+        const campaign = tds[4].innerText.toLowerCase();
+        const dateStr = tds[5].innerText.toLowerCase();
         
-        // Grab the actively selected values from the dropdowns (Employee, Status)
         const selects = rows[i].querySelectorAll('select');
         const employee = selects[0].value.toLowerCase();
         const status = selects[1].value.toLowerCase();
         
-        // Combine all data into one searchable string
-        const combinedData = `${chalaanNo} ${storeName} ${dateStr} ${employee} ${status}`;
+        const combinedData = `${chalaanNo} ${storeCode} ${storeName} ${campaign} ${dateStr} ${employee} ${status}`;
         
-        // Hide or show row based on match
         if (combinedData.includes(filterText)) {
             rows[i].style.display = "";
         } else {
@@ -290,6 +301,25 @@ async function applyBulkUpdate() {
     if (chalaan_nos.length === 0) return;
     if (!emp && !stat) return alert("Please select an employee or status to update.");
 
+    // NEW VALIDATION: Check selected rows before applying bulk status
+    if (stat !== '' && stat !== 'Pending') {
+        let hasUnassigned = false;
+        
+        checkboxes.forEach(cb => {
+            const tr = cb.closest('tr');
+            const currentEmp = tr.querySelectorAll('select')[0].value;
+            
+            // If the row is currently unassigned AND the bulk tool isn't assigning someone right now
+            if (currentEmp === 'Unassigned' && (emp === '' || emp === 'Unassigned')) {
+                hasUnassigned = true;
+            }
+        });
+
+        if (hasUnassigned) {
+            return alert("Cannot bulk update status: One or more selected Challans do not have an employee assigned. Please assign an employee first.");
+        }
+    }
+
     document.body.style.cursor = 'wait';
     const res = await pywebview.api.bulk_update_tracking(chalaan_nos, emp, stat);
     document.body.style.cursor = 'default';
@@ -321,4 +351,15 @@ async function applyBulkDelete() {
             alert("Error deleting records: " + res.error);
         }
     }
+}
+
+async function triggerRefresh() {
+    const btn = document.getElementById('refresh-btn');
+    const originalText = "Refresh Data";
+    btn.innerText = "Refreshing...";
+    
+    await loadTracking(); // Reload the data
+    
+    btn.innerText = "✓ Data Refreshed";
+    setTimeout(() => { btn.innerText = originalText; }, 1000);
 }

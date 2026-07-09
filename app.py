@@ -49,15 +49,18 @@ class ChalaanAPI:
                             chalaan_no INTEGER PRIMARY KEY,
                             store_code TEXT,
                             store_name TEXT,
+                            campaign_name TEXT,
                             state TEXT,
                             date TEXT,
                             employee_name TEXT,
                             status TEXT
                          )''')
+            
             c.execute("SELECT COUNT(*) FROM chalaan_seq")
             if c.fetchone()[0] == 0:
                 c.execute("INSERT INTO chalaan_seq (seq) VALUES (100)")
             conn.commit()
+
 
     def get_next_chalaan_no(self):
         with sqlite3.connect(self.db_path, timeout=10) as conn:
@@ -189,7 +192,7 @@ class ChalaanAPI:
         sign_path = os.path.join(get_base_path(), "assets", "sign.png")
         
         styles = getSampleStyleSheet()
-        cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=8, leading=10)
+        cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=6, leading=8)
 
         # NEW: Determine if we are in Bulk Mode
         is_bulk = len(stores_to_process) > 1
@@ -218,9 +221,9 @@ class ChalaanAPI:
             
             if os.path.exists(logo_path):
                 elements.append(Image(logo_path, width=530, height=80, kind='proportional', hAlign='CENTER'))
-                elements.append(Spacer(1, 40))
+                elements.append(Spacer(1, 30))
             
-            elements.append(Paragraph("<b>DELIVERY CHALLAN</b>", ParagraphStyle(name='Title', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=16, alignment=1, spaceAfter=20)))
+            elements.append(Paragraph("<b>DELIVERY CHALLAN</b>", ParagraphStyle(name='Title', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=18, alignment=1, spaceAfter=28)))
             
             safe_store_name = escape(str(final_store_name))
             safe_client_name = escape(str(client_name))
@@ -236,6 +239,7 @@ class ChalaanAPI:
                 ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
                 ('FONTNAME', (0,0), (0,-1), 'Helvetica-Bold'),
                 ('FONTNAME', (2,0), (2,-1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0,0), (-1,-1), 7),
                 ('VALIGN', (0,0), (-1,-1), 'TOP'),
                 ('BOTTOMPADDING', (0,0), (-1,-1), 8),
             ]))
@@ -276,8 +280,8 @@ class ChalaanAPI:
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
                 ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('FONTSIZE', (0, 0), (-1, -1), 7),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('INNERGRID', (0, 0), (-1, -2), 0.25, colors.black), 
                 ('BOX', (0, 0), (-1, -2), 0.25, colors.black),       
@@ -293,11 +297,15 @@ class ChalaanAPI:
                 elements.append(Image(sign_path, width=100, height=40, kind='proportional', hAlign='RIGHT'))
             elements.append(Paragraph("<b>Authorized Signatory</b>", ParagraphStyle(name='Sign', parent=styles['Normal'], alignment=2)))
             
-            # DB Insert
+            # DB Insert            
+            # Compress all campaigns into a single string for tracking
+            campaigns = list(set([str(item['campaign']).strip() for item in items if item['campaign']]))
+            campaign_str = ", ".join(campaigns)[:100] 
+
             with sqlite3.connect(self.db_path, timeout=10) as conn:
                 c = conn.cursor()
-                c.execute("INSERT INTO chalaans (chalaan_no, store_code, store_name, state, date, employee_name, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                          (chalaan_no, store_code, final_store_name, state, today_date, "Unassigned", "Pending"))
+                c.execute("INSERT INTO chalaans (chalaan_no, store_code, store_name, state, date, employee_name, status, campaign_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                          (chalaan_no, store_code, final_store_name, state, today_date, "Unassigned", "Pending", campaign_str))
                 conn.commit()
                 
             generated_count += 1
@@ -335,8 +343,8 @@ class ChalaanAPI:
     def get_tracking_data(self):
         with sqlite3.connect(self.db_path, timeout=10) as conn:
             c = conn.cursor()
-            c.execute("SELECT chalaan_no, store_name, date, employee_name, status FROM chalaans ORDER BY chalaan_no DESC")
-            data = [{"chalaan_no": r[0], "store_name": r[1], "date": r[2], "employee": r[3], "status": r[4]} for r in c.fetchall()]
+            c.execute("SELECT chalaan_no, store_code, store_name, campaign_name, date, employee_name, status FROM chalaans ORDER BY chalaan_no DESC")
+            data = [{"chalaan_no": r[0], "store_code": r[1], "store_name": r[2], "campaign_name": r[3] or "", "date": r[4], "employee": r[5], "status": r[6]} for r in c.fetchall()]
             return data
 
     def update_tracking(self, chalaan_no, employee, status):

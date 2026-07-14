@@ -45,6 +45,11 @@ A custom, standalone desktop application developed for **Timeless Impressions 24
 
 ## 💻 Developer Setup & Installation
 
+To build the app, use the follow PyInstaller command inside the project folder where app.py file is located:
+
+python -m PyInstaller --noconsole --onefile --icon=app_icon.ico --hidden-import webview --add-data "gui;gui" --add-data "assets;assets" app.py
+
+
 To run this project from the source code, follow these steps:
 
 **1. Directory Structure**

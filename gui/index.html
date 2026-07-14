@@ -108,10 +108,16 @@
                 <div id="tracking" class="tab-content">
             <h1>Challan Tracking</h1>
             <div class="card row-layout" style="align-items: flex-start;">
-                <div>
-                    <input type="text" id="new-emp-name" placeholder="New Employee Name">
-                    <button onclick="addEmployee()">Add Employee</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="new-emp-name" placeholder="Add New Employee Name">
+                    <button onclick="addEmployee()">Add</button>
+                    <span style="color: #bdc3c7; margin: 0 5px;">|</span>
+                    <select id="delete-emp-select" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="">-- Remove Employee --</option>
+                    </select>
+                    <button onclick="deleteEmployee()" style="background-color: #e74c3c; padding: 6px 12px;">Delete</button>
                 </div>
+
                 
                 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
                     <button id="refresh-btn" onclick="triggerRefresh()" style="background-color: #27ae60;">Refresh Data</button>
@@ -146,7 +152,7 @@
                     <tr>
                         <th style="width: 30px;"><input type="checkbox" id="select-all" onclick="toggleAllCheckboxes()"></th>
                         <th>Challan No</th>
-                        <th>Challan Code</th>
+                        <th>Store Code</th>
                         <th>Store Name</th>
                         <th>Campaign</th>
                         <th>Date</th>

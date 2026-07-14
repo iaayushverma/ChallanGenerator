@@ -50,8 +50,8 @@ async function loadEstimate() {
         select.innerHTML = '<option value="">-- Select a specific store --</option>';
         currentStores.forEach(store => {
             let opt = document.createElement('option');
-            opt.value = store;
-            opt.innerHTML = store;
+            opt.value = store.code;       // Hidden value for the backend to use
+            opt.innerHTML = store.name;   // Human-readable name for the user to see
             select.appendChild(opt);
         });
     }
@@ -72,40 +72,62 @@ async function generateBulk() {
     const clientName = document.getElementById('client-name').value || "Unknown Client";
     if (!outputFolder) return alert("Please click 'Choose Save Location' to select where to save the files.");
     if (!state) return alert("Please select a state from the dropdown first.");
+   
+    document.body.style.cursor = 'wait';
     
-    document.body.style.cursor = 'wait'; 
-    const res = await pywebview.api.generate_pdfs(currentStores, state, outputFolder, clientName);
-    document.body.style.cursor = 'default'; 
+    // NEW: We extract just the string codes from the objects to send to Python
+    const storeCodesOnly = currentStores.map(store => store.code);
     
+    // Pass the cleaned array of strings to the backend
+    const res = await pywebview.api.generate_pdfs(storeCodesOnly, state, outputFolder, clientName);
+    document.body.style.cursor = 'default';
+   
     if (res.success) alert(`Successfully generated ${res.count} Chalaans.\nSaved to: ${res.path}`);
     else alert("Error: " + res.error);
 }
 
 async function generateSingle() {
     const state = document.getElementById('state-select').value;
-    const store = document.getElementById('single-store-select').value;
+    
+    // Grab the select element itself so we can read both the value AND the text
+    const storeSelect = document.getElementById('single-store-select');
+    const storeCode = storeSelect.value;
+    const storeName = storeCode ? storeSelect.options[storeSelect.selectedIndex].text : "";
+    
     const clientName = document.getElementById('client-name').value || "Unknown Client";
+    
     if (!outputFolder) return alert("Please click 'Choose Save Location' first.");
     if (!state) return alert("Please select a state.");
-    if (!store) return alert("Please select a store.");
+    if (!storeCode) return alert("Please select a store.");
 
     document.body.style.cursor = 'wait';
-    const res = await pywebview.api.generate_pdfs([store], state, outputFolder, clientName);
-    document.body.style.cursor = 'default';
     
-    if (res.success) alert(`Successfully generated Challan for ${store}.\nSaved to: ${res.path}`);
+    // Pass the storeCode to the backend to process the PDF
+    const res = await pywebview.api.generate_pdfs([storeCode], state, outputFolder, clientName);
+    document.body.style.cursor = 'default';
+   
+    // Show the human-readable storeName in the success popup
+    if (res.success) alert(`Successfully generated Challan for ${storeName}.\nSaved to: ${res.path}`);
     else alert("Error: " + res.error);
 }
 
 async function loadEmployees() {
     employeesList = await pywebview.api.get_employees();
-    
+   
     // Populate the bulk update dropdown
     const bulkEmpSelect = document.getElementById('bulk-emp-select');
     if (bulkEmpSelect) {
         let opts = '<option value="">-- No Change --</option><option value="Unassigned">Unassigned</option>';
         employeesList.forEach(e => { opts += `<option value="${e}">${e}</option>`; });
         bulkEmpSelect.innerHTML = opts;
+    }
+
+    // NEW: Populate the Delete Employee dropdown
+    const deleteEmpSelect = document.getElementById('delete-emp-select');
+    if (deleteEmpSelect) {
+        let delOpts = '<option value="">-- Remove Employee --</option>';
+        employeesList.forEach(e => { delOpts += `<option value="${e}">${e}</option>`; });
+        deleteEmpSelect.innerHTML = delOpts;
     }
 }
 
@@ -115,6 +137,28 @@ async function addEmployee() {
     const res = await pywebview.api.add_employee(name);
     if (res.error) alert(res.error);
     else { document.getElementById('new-emp-name').value = ''; loadEmployees(); }
+}
+
+async function deleteEmployee() {
+    const selectEl = document.getElementById('delete-emp-select');
+    const name = selectEl.value;
+    
+    if (!name) return alert("Please select an employee from the dropdown to delete.");
+    
+    const isConfirmed = confirm(`Are you sure you want to remove "${name}" from the system?\n\nNote: Any past challans assigned to them will safely retain their name for your records.`);
+    
+    if (isConfirmed) {
+        document.body.style.cursor = 'wait';
+        const res = await pywebview.api.delete_employee(name);
+        document.body.style.cursor = 'default';
+        
+        if (res.error) {
+            alert(res.error);
+        } else {
+            await loadEmployees();
+            await loadTracking();
+        }
+    }
 }
 
 async function loadTracking() {
@@ -133,6 +177,13 @@ async function loadTracking() {
         
         let empSelect = `<select onchange="updateRow(${row.chalaan_no}, this)">
             <option value="Unassigned" ${row.employee === 'Unassigned' ? 'selected' : ''}>Unassigned</option>`;
+        
+        // NEW: If an employee was deleted but is assigned to this old challan, safely display them
+        let employeeExists = employeesList.includes(row.employee) || row.employee === 'Unassigned';
+        if (!employeeExists && row.employee) {
+            empSelect += `<option value="${row.employee}" selected>${row.employee} (Deleted)</option>`;
+        }
+
         employeesList.forEach(e => {
             empSelect += `<option value="${e}" ${row.employee === e ? 'selected' : ''}>${e}</option>`;
         });

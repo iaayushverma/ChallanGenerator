@@ -15,6 +15,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from xml.sax.saxutils import escape
+import re
 
 def get_base_path():
     if getattr(sys, 'frozen', False):
@@ -172,11 +173,22 @@ class ChalaanAPI:
                 self.current_estimate_data[s_code].append(item)
 
             matched_keys = list(set(self.current_estimate_data.keys()) - unmatched)
+            
+            # Package both the code and the resolved name for the dropdown
+            stores_list = []
+            for code in matched_keys:
+                master_name = self.current_store_master.get(code, "")
+                backup_name = self.estimate_store_names.get(code, "Unknown Store")
+                final_name = master_name if master_name else backup_name
+                
+                # Append a dictionary so JS can read both
+                stores_list.append({"code": code, "name": final_name})
+
             return {
-                "success": True, 
+                "success": True,
                 "matched_count": len(matched_keys),
                 "unmatched": list(unmatched),
-                "stores": matched_keys
+                "stores": stores_list
             }
         except Exception as e:
             return {"error": str(e)}
@@ -228,11 +240,21 @@ class ChalaanAPI:
             safe_store_name = escape(str(final_store_name))
             safe_client_name = escape(str(client_name))
             
+            # NEW: Custom style to match the 7pt table font perfectly
+            header_value_style = ParagraphStyle(
+                name='HeaderValue', 
+                parent=styles['Normal'], 
+                fontName='Helvetica', 
+                fontSize=7, 
+                leading=9  # Keeps the line spacing clean if the address wraps to a second line
+            )
+           
             header_data = [
-                ["Client:", Paragraph(safe_client_name, styles['Normal']), "Dated:", today_date],
-                ["Store Address:", Paragraph(safe_store_name, styles['Normal']), "Challan no.:", str(chalaan_no)],
+                ["Client:", Paragraph(safe_client_name, header_value_style), "Dated:", today_date],
+                ["Store Address:", Paragraph(safe_store_name, header_value_style), "Challan no.:", str(chalaan_no)],
                 ["Store Code:", store_code, "State:", state]
             ]
+
             
             htable = Table(header_data, colWidths=[80, 200, 80, 100])
             htable.setStyle(TableStyle([
@@ -312,7 +334,12 @@ class ChalaanAPI:
             
             # NEW: If we are generating just a single store, build the single PDF here and clear out the elements
             if not is_bulk:
-                pdf_filename = os.path.join(output_dir, f"Challan_{chalaan_no}_{store_code}.pdf")
+                # Use Regex to replace all invalid Windows filename characters with a dash
+                safe_file_store_name = re.sub(r'[\\/*?:"<>|]', "-", final_store_name)
+                # Replace spaces with underscores for cleaner URLs/filenames
+                safe_file_store_name = safe_file_store_name.replace(" ", "_")
+                
+                pdf_filename = os.path.join(output_dir, f"Challan_{chalaan_no}_{safe_file_store_name}.pdf")
                 single_doc = SimpleDocTemplate(pdf_filename, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
                 single_doc.build(elements)
                 elements = []
@@ -339,6 +366,16 @@ class ChalaanAPI:
                 return {"success": True}
         except sqlite3.IntegrityError:
             return {"error": "Employee already exists"}
+    
+    def delete_employee(self, name):
+        try:
+            with sqlite3.connect(self.db_path, timeout=10) as conn:
+                c = conn.cursor()
+                c.execute("DELETE FROM employees WHERE name = ?", (name,))
+                conn.commit()
+                return {"success": True}
+        except Exception as e:
+            return {"error": str(e)}
 
     def get_tracking_data(self):
         with sqlite3.connect(self.db_path, timeout=10) as conn:

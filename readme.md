@@ -61,8 +61,7 @@ ChallanGenerator/
 │   └── app.js
 │
 ├── assets/                # Images and Branding
-│   ├── logo.png
-│   ├── sign.png
-│   └── app_icon.ico
+│   ├── logo.png   
+│   └── sign.png
 │
 └── app_icon.ico           # Application Icon

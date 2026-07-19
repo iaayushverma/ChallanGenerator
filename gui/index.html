@@ -96,6 +96,18 @@
                     </select>
                 </div>
 
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px;">Bulk Output Type:</label>
+                    <label style="margin-right: 15px; font-size: 14px;">
+                        <input type="radio" name="bulk-output-mode" value="combined" checked>
+                        Single PDF for all challans
+                    </label>
+                    <label style="font-size: 14px;">
+                        <input type="radio" name="bulk-output-mode" value="separate">
+                        Separate PDFs for each store
+                    </label>
+                </div>
+
                 <div class="actions">
                     <button class="primary" onclick="generateBulk()">Generate ALL Valid Stores</button>
                     <span class="or-divider">OR</span>

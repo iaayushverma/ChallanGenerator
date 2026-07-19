@@ -70,6 +70,8 @@ async function selectOutputFolder() {
 async function generateBulk() {
     const state = document.getElementById('state-select').value;
     const clientName = document.getElementById('client-name').value || "Unknown Client";
+    const selectedMode = document.querySelector('input[name="bulk-output-mode"]:checked');
+    const bulkOutputMode = selectedMode ? selectedMode.value : 'combined';
     if (!outputFolder) return alert("Please click 'Choose Save Location' to select where to save the files.");
     if (!state) return alert("Please select a state from the dropdown first.");
    
@@ -79,10 +81,13 @@ async function generateBulk() {
     const storeCodesOnly = currentStores.map(store => store.code);
     
     // Pass the cleaned array of strings to the backend
-    const res = await pywebview.api.generate_pdfs(storeCodesOnly, state, outputFolder, clientName);
+    const res = await pywebview.api.generate_pdfs(storeCodesOnly, state, outputFolder, clientName, bulkOutputMode);
     document.body.style.cursor = 'default';
    
-    if (res.success) alert(`Successfully generated ${res.count} Chalaans.\nSaved to: ${res.path}`);
+    if (res.success) {
+        const modeText = bulkOutputMode === 'separate' ? 'as separate PDFs' : 'as a single combined PDF';
+        alert(`Successfully generated ${res.count} Chalaans ${modeText}.\nSaved to: ${res.path}`);
+    }
     else alert("Error: " + res.error);
 }
 

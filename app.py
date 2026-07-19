@@ -193,9 +193,12 @@ class ChalaanAPI:
         except Exception as e:
             return {"error": str(e)}
 
-    def generate_pdfs(self, stores_to_process, state, output_dir, client_name="Reliance"):
+    def generate_pdfs(self, stores_to_process, state, output_dir, client_name="Reliance", bulk_output_mode="combined"):
         if not output_dir or not os.path.exists(output_dir):
             return {"error": "Invalid or no save location selected."}
+
+        if bulk_output_mode not in ("combined", "separate"):
+            bulk_output_mode = "combined"
 
         generated_count = 0
         today_date = datetime.datetime.now().strftime("%d.%m.%Y")
@@ -206,8 +209,8 @@ class ChalaanAPI:
         styles = getSampleStyleSheet()
         cell_style = ParagraphStyle('CellStyle', parent=styles['Normal'], fontSize=6, leading=8)
 
-        # NEW: Determine if we are in Bulk Mode
-        is_bulk = len(stores_to_process) > 1
+        # Bulk mode with explicit output choice: one combined PDF or separate PDFs per store
+        is_bulk = len(stores_to_process) > 1 and bulk_output_mode == "combined"
         elements = []
         
         # NEW: Setup a single massive Document for Bulk Mode

@@ -67,6 +67,33 @@ async function selectOutputFolder() {
     }
 }
 
+async function selectCustomLogo() {
+    const path = await pywebview.api.select_logo_file();
+    if (!path) return;
+
+    const res = await pywebview.api.set_custom_logo(path);
+    if (res.error) {
+        alert("Error: " + res.error);
+        return;
+    }
+
+    const textElement = document.getElementById('logo-status-text');
+    textElement.innerText = "Using custom logo: " + path;
+    textElement.style.color = "#0e8578";
+}
+
+async function clearCustomLogo() {
+    const res = await pywebview.api.clear_custom_logo();
+    if (res.error) {
+        alert("Error: " + res.error);
+        return;
+    }
+
+    const textElement = document.getElementById('logo-status-text');
+    textElement.innerText = "Using default logo";
+    textElement.style.color = "#6e655b";
+}
+
 async function generateBulk() {
     const state = document.getElementById('state-select').value;
     const clientName = document.getElementById('client-name').value || "Unknown Client";

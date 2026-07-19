@@ -2,197 +2,218 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Automated Challan Generator</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Timeless Impressions</h2>
-        <ul class="nav">
-            <li class="active" onclick="switchTab('generator')">Challan Generation</li>
-            <li onclick="switchTab('tracking')">Challan Tracking</li>
-            <li onclick="switchTab('backups')">Data Backup</li> </ul>
-        </ul>
-    </div>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand-block">
+                <p class="brand-tag">Operations Suite</p>
+                <h2>Timeless Impressions</h2>
+            </div>
+            <ul class="nav">
+                <li class="active" onclick="switchTab('generator')">Challan Generation</li>
+                <li onclick="switchTab('tracking')">Challan Tracking</li>
+                <li onclick="switchTab('backups')">Data Backup</li>
+            </ul>
+        </aside>
 
-    <div class="main-content">
-        <div id="generator" class="tab-content active">
-            <h1>Challan Generator</h1>
-            
-            <div class="card">
-                <h3>1. Master Data</h3>
-                <button onclick="loadMaster()">Upload Store Master Excel</button>
-                <p id="master-status" class="status-text">No master loaded.</p>
+        <main class="main-content">
+            <header class="topbar">
+                <h1 class="page-title">Automated Challan Workspace</h1>
+                <p class="page-subtitle">Generate, track and secure delivery challans in one place.</p>
+            </header>
+
+            <div id="generator" class="tab-content active">
+                <section class="card step-card">
+                    <h3>1. Master Data</h3>
+                    <p class="card-description">Upload your Store Master sheet to start mapping stores.</p>
+                    <button onclick="loadMaster()">Upload Store Master Excel</button>
+                    <p id="master-status" class="status-text">No master loaded.</p>
+                </section>
+
+                <section class="card step-card">
+                    <h3>2. Estimate Data</h3>
+                    <p class="card-description">Upload daily estimate data to match valid stores and campaigns.</p>
+                    <button onclick="loadEstimate()">Upload Estimate Excel</button>
+                    <p id="estimate-status" class="status-text">No estimate loaded.</p>
+
+                    <div id="unmatched-warning" class="warning" style="display: none;">
+                        <strong>Warning:</strong> The following Store Codes from the Estimate were not found in the Master list and will be skipped:<br>
+                        <span id="unmatched-list"></span>
+                    </div>
+                </section>
+
+                <section class="card step-card" id="generation-section" style="opacity: 0.5; pointer-events: none;">
+                    <h3>3. Generate PDFs</h3>
+
+                    <div class="folder-picker-section">
+                        <button onclick="selectOutputFolder()">Choose Save Location</button>
+                        <span id="save-location-text" class="status-text bold-text">No folder selected</span>
+                    </div>
+
+                    <div class="folder-picker-section">
+                        <button onclick="selectCustomLogo()">Upload Custom Logo</button>
+                        <button class="danger" onclick="clearCustomLogo()">Use Default Logo</button>
+                        <span id="logo-status-text" class="status-text bold-text">Using default logo</span>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label for="client-name">Client Name</label>
+                            <input type="text" id="client-name" value="Reliance" placeholder="Enter Client Name">
+                        </div>
+
+                        <div class="field-group">
+                            <label for="state-select">Select State for this batch</label>
+                            <select id="state-select">
+                                <option value="">-- Select State --</option>
+                                <optgroup label="States">
+                                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                                    <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                                    <option value="Assam">Assam</option>
+                                    <option value="Bihar">Bihar</option>
+                                    <option value="Chhattisgarh">Chhattisgarh</option>
+                                    <option value="Goa">Goa</option>
+                                    <option value="Gujarat">Gujarat</option>
+                                    <option value="Haryana">Haryana</option>
+                                    <option value="Himachal Pradesh">Himachal Pradesh</option>
+                                    <option value="Jharkhand">Jharkhand</option>
+                                    <option value="Karnataka">Karnataka</option>
+                                    <option value="Kerala">Kerala</option>
+                                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                    <option value="Maharashtra">Maharashtra</option>
+                                    <option value="Manipur">Manipur</option>
+                                    <option value="Meghalaya">Meghalaya</option>
+                                    <option value="Mizoram">Mizoram</option>
+                                    <option value="Nagaland">Nagaland</option>
+                                    <option value="Odisha">Odisha</option>
+                                    <option value="Punjab">Punjab</option>
+                                    <option value="Rajasthan">Rajasthan</option>
+                                    <option value="Sikkim">Sikkim</option>
+                                    <option value="Tamil Nadu">Tamil Nadu</option>
+                                    <option value="Telangana">Telangana</option>
+                                    <option value="Tripura">Tripura</option>
+                                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                    <option value="Uttarakhand">Uttarakhand</option>
+                                    <option value="West Bengal">West Bengal</option>
+                                </optgroup>
+                                <optgroup label="Union Territories">
+                                    <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                                    <option value="Chandigarh">Chandigarh</option>
+                                    <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra & Nagar Haveli and Daman & Diu</option>
+                                    <option value="Delhi">Delhi</option>
+                                    <option value="Jammu and Kashmir">Jammu & Kashmir</option>
+                                    <option value="Ladakh">Ladakh</option>
+                                    <option value="Lakshadweep">Lakshadweep</option>
+                                    <option value="Puducherry">Puducherry</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Bulk Output Type</label>
+                        <div class="radio-row">
+                            <label class="radio-chip">
+                                <input type="radio" name="bulk-output-mode" value="combined" checked>
+                                <span>Single PDF for all challans</span>
+                            </label>
+                            <label class="radio-chip">
+                                <input type="radio" name="bulk-output-mode" value="separate">
+                                <span>Separate PDFs for each store</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button class="primary" onclick="generateBulk()">Generate ALL Valid Stores</button>
+                        <span class="or-divider">OR</span>
+                        <select id="single-store-select"><option>-- Select a specific store --</option></select>
+                        <button onclick="generateSingle()">Generate Selected</button>
+                    </div>
+                </section>
             </div>
 
-            <div class="card">
-                <h3>2. Estimate Data</h3>
-                <button onclick="loadEstimate()">Upload Estimate Excel</button>
-                <p id="estimate-status" class="status-text">No estimate loaded.</p>
-                
-                <div id="unmatched-warning" class="warning" style="display: none;">
-                    <strong>Warning:</strong> The following Store Codes from the Estimate were not found in the Master list and will be skipped:<br>
-                    <span id="unmatched-list"></span>
-                </div>
-            </div>
+            <div id="tracking" class="tab-content">
+                <section class="card">
+                    <h3>Challan Tracking</h3>
+                    <div class="row-layout toolbar-row">
+                        <div class="employee-controls">
+                            <input type="text" id="new-emp-name" placeholder="Add New Employee Name">
+                            <button onclick="addEmployee()">Add</button>
+                            <span class="divider-text">|</span>
+                            <select id="delete-emp-select">
+                                <option value="">-- Remove Employee --</option>
+                            </select>
+                            <button class="danger" onclick="deleteEmployee()">Delete</button>
+                        </div>
 
-            <div class="card" id="generation-section" style="opacity: 0.5; pointer-events: none;">
-                <h3>3. Generate PDFs</h3>
-                
-                <div class="folder-picker-section">
-                    <button onclick="selectOutputFolder()">Choose Save Location</button>
-                    <span id="save-location-text" class="status-text bold-text">No folder selected</span>
-                </div>
+                        <div class="tracking-controls">
+                            <button id="refresh-btn" class="success" onclick="triggerRefresh()">Refresh Data</button>
+                            <input type="text" id="search-tracking" onkeyup="filterTracking()" placeholder="Search any record...">
+                        </div>
+                    </div>
+                </section>
 
-                <div style="margin-bottom: 15px;">
-                    <label for="client-name">Client Name:</label>
-                    <input type="text" id="client-name" value="Reliance" placeholder="Enter Client Name">
-                </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label for="state-select">Select State for this batch:</label>
-                    <select id="state-select">
-                        <option value="">-- Select State --</option>
-                        <optgroup label="States">
-                            <option value="Andhra Pradesh">Andhra Pradesh</option>
-                            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-                            <option value="Assam">Assam</option>
-                            <option value="Bihar">Bihar</option>
-                            <option value="Chhattisgarh">Chhattisgarh</option>
-                            <option value="Goa">Goa</option>
-                            <option value="Gujarat">Gujarat</option>
-                            <option value="Haryana">Haryana</option>
-                            <option value="Himachal Pradesh">Himachal Pradesh</option>
-                            <option value="Jharkhand">Jharkhand</option>
-                            <option value="Karnataka">Karnataka</option>
-                            <option value="Kerala">Kerala</option>
-                            <option value="Madhya Pradesh">Madhya Pradesh</option>
-                            <option value="Maharashtra">Maharashtra</option>
-                            <option value="Manipur">Manipur</option>
-                            <option value="Meghalaya">Meghalaya</option>
-                            <option value="Mizoram">Mizoram</option>
-                            <option value="Nagaland">Nagaland</option>
-                            <option value="Odisha">Odisha</option>
-                            <option value="Punjab">Punjab</option>
-                            <option value="Rajasthan">Rajasthan</option>
-                            <option value="Sikkim">Sikkim</option>
-                            <option value="Tamil Nadu">Tamil Nadu</option>
-                            <option value="Telangana">Telangana</option>
-                            <option value="Tripura">Tripura</option>
-                            <option value="Uttar Pradesh">Uttar Pradesh</option>
-                            <option value="Uttarakhand">Uttarakhand</option>
-                            <option value="West Bengal">West Bengal</option>
-                        </optgroup>
-                        <optgroup label="Union Territories">
-                            <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
-                            <option value="Chandigarh">Chandigarh</option>
-                            <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra & Nagar Haveli and Daman & Diu</option>
-                            <option value="Delhi">Delhi</option>
-                            <option value="Jammu and Kashmir">Jammu & Kashmir</option>
-                            <option value="Ladakh">Ladakh</option>
-                            <option value="Lakshadweep">Lakshadweep</option>
-                            <option value="Puducherry">Puducherry</option>
-                        </optgroup>
-                    </select>
-                </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 8px;">Bulk Output Type:</label>
-                    <label style="margin-right: 15px; font-size: 14px;">
-                        <input type="radio" name="bulk-output-mode" value="combined" checked>
-                        Single PDF for all challans
-                    </label>
-                    <label style="font-size: 14px;">
-                        <input type="radio" name="bulk-output-mode" value="separate">
-                        Separate PDFs for each store
-                    </label>
-                </div>
-
-                <div class="actions">
-                    <button class="primary" onclick="generateBulk()">Generate ALL Valid Stores</button>
-                    <span class="or-divider">OR</span>
-                    <select id="single-store-select"><option>-- Select a specific store --</option></select>
-                    <button onclick="generateSingle()">Generate Selected</button>
-                </div>
-            </div>
-        </div>
-
-                <div id="tracking" class="tab-content">
-            <h1>Challan Tracking</h1>
-            <div class="card row-layout" style="align-items: flex-start;">
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="text" id="new-emp-name" placeholder="Add New Employee Name">
-                    <button onclick="addEmployee()">Add</button>
-                    <span style="color: #bdc3c7; margin: 0 5px;">|</span>
-                    <select id="delete-emp-select" style="padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
-                        <option value="">-- Remove Employee --</option>
-                    </select>
-                    <button onclick="deleteEmployee()" style="background-color: #e74c3c; padding: 6px 12px;">Delete</button>
-                </div>
-
-                
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
-                    <button id="refresh-btn" onclick="triggerRefresh()" style="background-color: #27ae60;">Refresh Data</button>
-                    <input type="text" id="search-tracking" onkeyup="filterTracking()" placeholder="Search any record..." style="width: 200px; margin-right: 0;">
-                </div>
-            </div>
-            
-            <div id="bulk-actions" class="card" style="display: none; background-color: #e8f4fd; border-left: 4px solid #3498db; margin-bottom: 15px; padding: 15px;">
-                <strong>Bulk Actions (<span id="selected-count">0</span> selected):</strong>
-                <div style="display: flex; gap: 10px; margin-top: 10px; align-items: center;">
-                    
-                    <label for="bulk-emp-select" style="font-size: 13px; font-weight: bold;">Assign to:</label>
-                    <select id="bulk-emp-select">
-                        <option value="">-- No Change --</option>
-                        <option value="Unassigned">Unassigned</option>
+                <section id="bulk-actions" class="card bulk-actions-panel" style="display: none;">
+                    <strong>Bulk Actions (<span id="selected-count">0</span> selected):</strong>
+                    <div class="bulk-controls-row">
+                        <label for="bulk-emp-select">Assign to:</label>
+                        <select id="bulk-emp-select">
+                            <option value="">-- No Change --</option>
+                            <option value="Unassigned">Unassigned</option>
                         </select>
 
-                    <label for="bulk-status-select" style="font-size: 13px; font-weight: bold; margin-left: 10px;">Set Status:</label>
-                    <select id="bulk-status-select">
-                        <option value="">-- No Change --</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Received">Received</option>
-                    </select>
+                        <label for="bulk-status-select">Set Status:</label>
+                        <select id="bulk-status-select">
+                            <option value="">-- No Change --</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Received">Received</option>
+                        </select>
 
-                    <button class="primary" onclick="applyBulkUpdate()" style="padding: 6px 15px; font-size: 13px; margin-left: 10px;">Apply Update</button>
-                    <button onclick="applyBulkDelete()" style="background-color: #e74c3c; padding: 6px 15px; font-size: 13px; margin-left: auto;">Delete Selected</button>
-                </div>
+                        <button class="primary" onclick="applyBulkUpdate()">Apply Update</button>
+                        <button class="danger push-right" onclick="applyBulkDelete()">Delete Selected</button>
+                    </div>
+                </section>
+
+                <section class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th class="check-col"><input type="checkbox" id="select-all" onclick="toggleAllCheckboxes()"></th>
+                                <th>Challan No</th>
+                                <th>Store Code</th>
+                                <th>Store Name</th>
+                                <th>Campaign</th>
+                                <th>Date</th>
+                                <th>Assigned To</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tracking-body"></tbody>
+                    </table>
+                </section>
             </div>
 
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th style="width: 30px;"><input type="checkbox" id="select-all" onclick="toggleAllCheckboxes()"></th>
-                        <th>Challan No</th>
-                        <th>Store Code</th>
-                        <th>Store Name</th>
-                        <th>Campaign</th>
-                        <th>Date</th>
-                        <th>Assigned To</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="tracking-body"></tbody>
-            </table>
-        </div>
+            <div id="backups" class="tab-content">
+                <section class="card">
+                    <h3>Export Data Backup</h3>
+                    <p class="card-description">Save a secure copy of your tracking data, employee list, and challan sequence numbers to a USB drive or cloud folder.</p>
+                    <button class="primary" onclick="exportData()">Export Database</button>
+                </section>
 
-        <div id="backups" class="tab-content">
-            <h1>Data Backup & Restore</h1>
-            
-            <div class="card">
-                <h3>Export Data Backup</h3>
-                <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">Save a secure copy of your tracking data, employee list, and chalaan sequence numbers to a USB drive or cloud folder.</p>
-                <button class="primary" onclick="exportData()">Export Database</button>
+                <section class="card">
+                    <h3>Restore from Backup</h3>
+                    <p class="card-description">Restore your system using an older backup file.</p>
+                    <p class="danger-note"><strong>Warning:</strong> This will completely overwrite your current data.</p>
+                    <button class="danger" onclick="importData()">Restore Database</button>
+                </section>
             </div>
-
-            <div class="card">
-                <h3>Restore from Backup</h3>
-                <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 15px;">Restore your system using an older backup file. <br><strong style="color: #e74c3c;">Warning:</strong> This will completely overwrite your current data.</p>
-                <button style="background-color: #e74c3c; color: white;" onclick="importData()">Restore Database</button>
-            </div>
-        </div>
-
+        </main>
     </div>
     <script src="app.js"></script>
 </body>

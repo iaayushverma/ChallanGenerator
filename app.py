@@ -40,6 +40,7 @@ class ChalaanAPI:
         self.current_estimate_data = {}
         self.current_store_master = {}
         self.estimate_store_names = {}
+        self.custom_logo_path = None
 
     def init_db(self):
         with sqlite3.connect(self.db_path, timeout=10) as conn:
@@ -81,6 +82,32 @@ class ChalaanAPI:
         window = webview.windows[0]
         result = window.create_file_dialog(webview.FileDialog.FOLDER)
         return result[0] if result else None
+
+    def select_logo_file(self):
+        window = webview.windows[0]
+        result = window.create_file_dialog(
+            webview.FileDialog.OPEN,
+            allow_multiple=False,
+            file_types=('Image Files (*.png;*.jpg;*.jpeg;*.webp)',)
+        )
+        return result[0] if result else None
+
+    def set_custom_logo(self, filepath):
+        if not filepath:
+            return {"error": "No file selected."}
+        if not os.path.exists(filepath):
+            return {"error": "Selected logo file does not exist."}
+
+        allowed_exts = ('.png', '.jpg', '.jpeg', '.webp')
+        if not filepath.lower().endswith(allowed_exts):
+            return {"error": "Invalid logo format. Please select PNG, JPG, JPEG, or WEBP."}
+
+        self.custom_logo_path = filepath
+        return {"success": True, "path": filepath}
+
+    def clear_custom_logo(self):
+        self.custom_logo_path = None
+        return {"success": True}
 
     def find_col_index(self, headers, possible_names):
         for i, header in enumerate(headers):
@@ -203,7 +230,8 @@ class ChalaanAPI:
         generated_count = 0
         today_date = datetime.datetime.now().strftime("%d.%m.%Y")
         
-        logo_path = os.path.join(get_base_path(), "assets", "logo.png")
+        default_logo_path = os.path.join(get_base_path(), "assets", "logo.png")
+        logo_path = self.custom_logo_path if self.custom_logo_path and os.path.exists(self.custom_logo_path) else default_logo_path
         sign_path = os.path.join(get_base_path(), "assets", "sign.png")
         
         styles = getSampleStyleSheet()
